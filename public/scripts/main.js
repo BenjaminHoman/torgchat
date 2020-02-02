@@ -21,6 +21,11 @@ var config = {
 var game = new Phaser.Game(config);
 var phaser = null;
 var groundLayer = null;
+
+var backgroundGroup = 1;
+var playerGroup = 2;
+var forgroundGroup = 3;
+
 var player = null;
 var otherPlayersMap = new Map();
 var stars = null;
@@ -47,16 +52,19 @@ function preload() {
 }
 
 function create() {
-	this.add.tileSprite(0, 0, 5000, 5000, 'sky').setScrollFactor(0.5);
+	var background = this.add.tileSprite(0, 0, 5000, 5000, 'sky').setScrollFactor(0.5);
+	background.setDepth(backgroundGroup);
 
 	// load the map 
     map = this.make.tilemap({key: 'map'});
     
     var groundTiles = map.addTilesetImage('tiles');
     groundLayer = map.createDynamicLayer('ground', groundTiles, 0, 0);
+    groundLayer.setDepth(playerGroup);
     groundLayer.setCollisionByExclusion([-1]);
 
     var arcadeLayer = map.createDynamicLayer('arcade', groundTiles, 0, 0);
+    arcadeLayer.setDepth(playerGroup);
     arcadeLayer.setCollisionByExclusion([-1]);
  
     // set the boundaries of our game world
@@ -65,6 +73,7 @@ function create() {
 
 	// //create player
 	player = new Torgman(this, groundLayer, null, 0);
+	player.player.setDepth(playerGroup);
 
 	this.cameras.main.setBounds(0,0, 800, 600);
 	this.cameras.main.startFollow(player.player);
@@ -75,12 +84,15 @@ function create() {
 
 	fog = this.add.tileSprite(0, 0, 5000, 5000, 'fog').setScrollFactor(0.8);
 	fog2 = this.add.tileSprite(100, 0, 5000, 5000, 'fog').setScrollFactor(0.8);
+	fog.setDepth(forgroundGroup);
+	fog2.setDepth(forgroundGroup);
 
 	phaser = this;
 
 	si = new ServerInterface({
 		handleNewPlayer: function(data){
 			var newPlayer = new Torgman(phaser, groundLayer, data.x, data.y);
+			newPlayer.player.setDepth(playerGroup);
 			newPlayer.player.body.moves = false;
 			newPlayer.client_id = data.client_id;
 			otherPlayersMap.set(newPlayer.client_id, newPlayer);
@@ -109,6 +121,7 @@ function create() {
 			data.positions.forEach(function(pos){
 				if (pos.client_id !== player.client_id){
 					var newPlayer = new Torgman(phaser, groundLayer, pos.x, pos.y);
+					newPlayer.player.setDepth(playerGroup);
 					newPlayer.player.body.moves = false;
 					newPlayer.client_id = pos.client_id;
 					otherPlayersMap.set(newPlayer.client_id, newPlayer);
