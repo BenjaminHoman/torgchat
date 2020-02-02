@@ -28,15 +28,14 @@ var forgroundGroup = 3;
 
 var player = null;
 var otherPlayersMap = new Map();
-var stars = null;
-var cursors = null;
-var pointer = null;
-var score = 0;
-var scoreText = null;
 var fog = null;
 var fog2 = null;
 var si = null;
 var intervalStarted = false;
+
+var keyLeft;
+var keyRight;
+var keyUp;
 
 function preload() {
 	this.load.tilemapTiledJSON('map', 'assets/stage1.json');
@@ -79,8 +78,9 @@ function create() {
 	this.cameras.main.startFollow(player.player);
 	this.cameras.main.setBackgroundColor(0xbababa)
 
-	cursors = this.input.keyboard.createCursorKeys();
-	pointer = this.input.activePointer;
+	keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+	keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+	keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
 
 	fog = this.add.tileSprite(0, 0, 5000, 5000, 'fog').setScrollFactor(0.8);
 	fog2 = this.add.tileSprite(100, 0, 5000, 5000, 'fog').setScrollFactor(0.8);
@@ -143,14 +143,14 @@ function create() {
 }
 
 function update() {
-	if (cursors.left.isDown || isMobileLeft(phaser)) {
+	if (keyLeft.isDown || isMobileLeft(phaser)) {
 		player.player.setVelocityX(-100);
 		player.player.anims.play('walk', true);
 		player.player.flipX = true;
 		player.anim = 'walk';
 		player.flipX = true;
 
-	} else if (cursors.right.isDown || isMobileRight(phaser)) {
+	} else if (keyRight.isDown || isMobileRight(phaser)) {
 		player.player.setVelocityX(100);
 		player.player.anims.play('walk', true);
 		player.player.flipX = false;
@@ -163,7 +163,7 @@ function update() {
 		player.anim = 'idle';
 	}
 
-	if ((cursors.up.isDown || isMobileUp(phaser)) && player.player.body.onFloor()) {
+	if ((keyUp.isDown || isMobileUp(phaser)) && player.player.body.onFloor()) {
 		player.player.setVelocityY(-330);
 	}
 
