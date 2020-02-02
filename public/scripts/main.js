@@ -1,42 +1,8 @@
 
-class Torgman {
-	constructor(phaser, groundLayer, x, y){
-		if (x == null){
-			x = Phaser.Math.Between(0, 350);
-		}
-		this.player = phaser.physics.add.sprite(x, y, 'torgman');
-		this.player.setScale(0.3);
-		this.player.setOrigin(0);
-		this.player.setBounce(0);
-		this.player.setCollideWorldBounds(true);
-
-		phaser.physics.add.collider(groundLayer, this.player);
-
-		phaser.anims.create({
-			key: 'walk',
-			frames: phaser.anims.generateFrameNumbers('torgman', { start: 1, end: 3 }),
-			frameRate: 10,
-			repeat: -1
-		});
-
-		phaser.anims.create({
-			key: 'idle',
-			frames: [{ key: 'torgman', frame: 0 }],
-			frameRate: 20
-		});
-
-		phaser.anims.create({
-			key: 'jump',
-			frames: [{ key: 'torgman', frame: 4 }],
-			frameRate: 20
-		});
-	}
-}
-
 var config = {
 	type: Phaser.AUTO,
-	width: window.innerWidth/5,
-	height: window.innerHeight/5,
+	width: gameWidth(),
+	height: gameHeight(),
 	physics: {
 		default: 'arcade',
 		arcade: {
@@ -115,6 +81,7 @@ function create() {
 	si = new ServerInterface({
 		handleNewPlayer: function(data){
 			var newPlayer = new Torgman(phaser, groundLayer, data.x, data.y);
+			newPlayer.player.body.moves = false;
 			newPlayer.client_id = data.client_id;
 			otherPlayersMap.set(newPlayer.client_id, newPlayer);
 			console.log(`new player. id: ${data.client_id}`);
@@ -137,12 +104,12 @@ function create() {
 					other.player.flipX = position.flipX;
 				}
 			});
-			//console.log('set positions');
 		},
 		handleCurrentState: function(data){
 			data.positions.forEach(function(pos){
 				if (pos.client_id !== player.client_id){
 					var newPlayer = new Torgman(phaser, groundLayer, pos.x, pos.y);
+					newPlayer.player.body.moves = false;
 					newPlayer.client_id = pos.client_id;
 					otherPlayersMap.set(newPlayer.client_id, newPlayer);
 					console.log(`current player. id: ${newPlayer.client_id}`);
@@ -162,63 +129,15 @@ function create() {
 	si.connect();
 }
 
-function leftTouch(){
-	var pointerDown = phaser.input.activePointer.isDown;
-	let halfX = window.innerWidth/5/2;
-	let halfY = window.innerHeight/5/2;
-
-	if (pointerDown){
-		let x = phaser.input.activePointer.x;
-		let y = phaser.input.activePointer.y;
-
-		if (x < halfX){
-			return true;
-		}
-	}
-	return false;
-}
-
-function rightTouch(){
-	var pointerDown = phaser.input.activePointer.isDown;
-	let halfX = window.innerWidth/5/2;
-	let halfY = window.innerHeight/5/2;
-
-	if (pointerDown){
-		let x = phaser.input.activePointer.x;
-		let y = phaser.input.activePointer.y;
-
-		if (x > halfX){
-			return true;
-		}
-	}
-	return false;
-}
-
-function upTouch(){
-	var pointerDown = phaser.input.activePointer.isDown;
-	let halfX = window.innerWidth/5/2;
-	let halfY = window.innerHeight/5/2;
-
-	if (pointerDown){
-		let x = phaser.input.activePointer.x;
-		let y = phaser.input.activePointer.y;
-
-		if (y < halfY){
-			return true;
-		}
-	}
-	return false;
-}
-
 function update() {
-	if (cursors.left.isDown || leftTouch()) {
+	if (cursors.left.isDown || isMobileLeft(phaser)) {
 		player.player.setVelocityX(-100);
 		player.player.anims.play('walk', true);
 		player.player.flipX = true;
 		player.anim = 'walk';
 		player.flipX = true;
 
-	} else if (cursors.right.isDown || rightTouch()) {
+	} else if (cursors.right.isDown || isMobileRight(phaser)) {
 		player.player.setVelocityX(100);
 		player.player.anims.play('walk', true);
 		player.player.flipX = false;
@@ -231,7 +150,7 @@ function update() {
 		player.anim = 'idle';
 	}
 
-	if ((cursors.up.isDown || upTouch()) && player.player.body.onFloor()) {
+	if ((cursors.up.isDown || isMobileUp(phaser)) && player.player.body.onFloor()) {
 		player.player.setVelocityY(-330);
 	}
 
